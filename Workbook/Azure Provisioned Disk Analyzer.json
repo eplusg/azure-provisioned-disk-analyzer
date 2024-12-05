@@ -1,0 +1,242 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Azure Provisioned Disk Usage Analyzer\nThis report helps you analyze the amount of unused disk space available for each disk in your subscriptions.\n\nIt's important to analyze this because you will be charged based on the provisioned disk size, regardless of how much space is actually used. For instance, if you provision a 200 GiB disk on a 256 GiB disk, you will be billed for the full 256 GiB provisioned size."
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "e85b2cc1-4827-494f-9592-c7da774fba55",
+            "version": "KqlParameterItem/1.0",
+            "name": "subscription",
+            "label": "Subscription",
+            "type": 6,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "includeAll": false,
+              "selectAllValue": "",
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": [
+              "value::all"
+            ]
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 2"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "resources\n| where type =~ 'Microsoft.Compute/disks'\n| where name !has \"-ASRReplica\"\n| extend diskSku = sku.name\n| extend provisionedSizeGB = properties.diskSizeGB\n| extend tierSizeGB = case(\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 32, 32,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 64, 64,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 128, 128,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 256, 256,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 512, 512,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 1024, 1024,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 2048, 2048,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 4096, 4096,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 8192, 8192,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 16384, 16384,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 32767, 32767,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 4, 4,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 8, 8,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 16, 16,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 32, 32,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 64, 64,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 128, 128,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 256, 256,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 512, 512,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 1024, 1024,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 2048, 2048,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 4096, 4096,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 8192, 8192,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 16384, 16384,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 32767, 32767,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 4, 4,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 8, 8,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 16, 16,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 32, 32,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 64, 64,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 128, 128,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 256, 256,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 512, 512,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 1024, 1024,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 2048, 2048,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 4096, 4096,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 8192, 8192,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 16384, 16384,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 32767, 32767,\n    0)\n| extend sizeDifferenceGB = tierSizeGB - provisionedSizeGB\n| where sizeDifferenceGB > 2\n| project id, resourceGroup, subscriptionId, provisionedSizeGB, tierSizeGB, sizeDifferenceGB\n| summarize TotalUnusedDiskSpaceGB = sum(sizeDifferenceGB)",
+              "size": 4,
+              "title": "Total unused disk space",
+              "showRefreshButton": true,
+              "queryType": 1,
+              "resourceType": "microsoft.resourcegraph/resources",
+              "crossComponentResources": [
+                "{subscription}"
+              ],
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "TotalUnusedDiskSpaceGB",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "min": 0,
+                    "max": 100,
+                    "palette": "orangeRed"
+                  },
+                  "numberFormat": {
+                    "unit": 5,
+                    "options": {
+                      "style": "decimal",
+                      "useGrouping": false
+                    }
+                  }
+                },
+                "showBorder": true,
+                "size": "auto"
+              }
+            },
+            "customWidth": "15",
+            "name": "query - Total disk space"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "resources\n| where type =~ 'Microsoft.Compute/disks'\n| where name !has \"-ASRReplica\"\n| extend diskSku = sku.name\n| extend provisionedSizeGB = properties.diskSizeGB\n| extend tierSizeGB = case(\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 32, 32,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 64, 64,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 128, 128,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 256, 256,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 512, 512,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 1024, 1024,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 2048, 2048,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 4096, 4096,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 8192, 8192,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 16384, 16384,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 32767, 32767,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 4, 4,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 8, 8,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 16, 16,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 32, 32,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 64, 64,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 128, 128,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 256, 256,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 512, 512,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 1024, 1024,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 2048, 2048,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 4096, 4096,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 8192, 8192,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 16384, 16384,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 32767, 32767,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 4, 4,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 8, 8,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 16, 16,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 32, 32,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 64, 64,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 128, 128,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 256, 256,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 512, 512,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 1024, 1024,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 2048, 2048,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 4096, 4096,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 8192, 8192,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 16384, 16384,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 32767, 32767,\n    0)\n| extend sizeDifferenceGB = tierSizeGB - provisionedSizeGB\n| where sizeDifferenceGB > 2\n| project id, resourceGroup, subscriptionId, provisionedSizeGB, tierSizeGB, sizeDifferenceGB\n| count",
+              "size": 4,
+              "title": "Number of disks",
+              "showRefreshButton": true,
+              "queryType": 1,
+              "resourceType": "microsoft.resourcegraph/resources",
+              "crossComponentResources": [
+                "{subscription}"
+              ],
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "auto"
+                  },
+                  "numberFormat": {
+                    "unit": 0,
+                    "options": {
+                      "style": "decimal"
+                    }
+                  }
+                },
+                "showBorder": true,
+                "size": "auto"
+              }
+            },
+            "customWidth": "15",
+            "name": "query - Total number of disks"
+          }
+        ]
+      },
+      "name": "group - Total"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type =~ 'Microsoft.Compute/disks'\n| where name !has \"-ASRReplica\"\n| extend diskState = tostring(properties.diskState)\n| extend diskSku = sku.name\n| extend provisionedSizeGB = properties.diskSizeGB\n| extend tierSizeGB = case(\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 32, 32,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 64, 64,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 128, 128,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 256, 256,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 512, 512,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 1024, 1024,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 2048, 2048,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 4096, 4096,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 8192, 8192,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 16384, 16384,\n    diskSku =~ 'Standard_LRS' and provisionedSizeGB <= 32767, 32767,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 4, 4,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 8, 8,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 16, 16,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 32, 32,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 64, 64,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 128, 128,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 256, 256,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 512, 512,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 1024, 1024,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 2048, 2048,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 4096, 4096,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 8192, 8192,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 16384, 16384,\n    diskSku =~ 'StandardSSD_LRS' and provisionedSizeGB <= 32767, 32767,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 4, 4,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 8, 8,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 16, 16,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 32, 32,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 64, 64,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 128, 128,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 256, 256,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 512, 512,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 1024, 1024,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 2048, 2048,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 4096, 4096,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 8192, 8192,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 16384, 16384,\n    diskSku =~ 'Premium_LRS' and provisionedSizeGB <= 32767, 32767,\n    0)\n| extend sizeDifferenceGB = tierSizeGB - provisionedSizeGB\n| where sizeDifferenceGB > 1\n| project id, resourceGroup, subscriptionId, provisionedSizeGB, tierSizeGB, sizeDifferenceGB, diskState",
+        "size": 3,
+        "title": "Unused disks",
+        "showExportToExcel": true,
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "{subscription}"
+        ],
+        "gridSettings": {
+          "rowLimit": 10000,
+          "filter": true,
+          "labelSettings": [
+            {
+              "columnId": "id",
+              "label": "Disk Name"
+            },
+            {
+              "columnId": "resourceGroup",
+              "label": "Resource Group"
+            },
+            {
+              "columnId": "subscriptionId",
+              "label": "Subscription ID"
+            },
+            {
+              "columnId": "provisionedSizeGB",
+              "label": "Provisioned Size (GB)"
+            },
+            {
+              "columnId": "tierSizeGB",
+              "label": "Tier Size (GB)"
+            },
+            {
+              "columnId": "sizeDifferenceGB",
+              "label": "Size Difference (GB)"
+            },
+            {
+              "columnId": "diskState",
+              "label": "Disk State",
+              "comment": ""
+            }
+          ]
+        },
+        "tileSettings": {
+          "showBorder": false,
+          "titleContent": {
+            "columnMatch": "id",
+            "formatter": 1
+          },
+          "leftContent": {
+            "columnMatch": "tierSizeGB",
+            "formatter": 12,
+            "formatOptions": {
+              "palette": "auto"
+            },
+            "numberFormat": {
+              "unit": 17,
+              "options": {
+                "maximumSignificantDigits": 3,
+                "maximumFractionDigits": 2
+              }
+            }
+          }
+        },
+        "graphSettings": {
+          "type": 0,
+          "topContent": {
+            "columnMatch": "id",
+            "formatter": 1
+          },
+          "centerContent": {
+            "columnMatch": "tierSizeGB",
+            "formatter": 1,
+            "numberFormat": {
+              "unit": 17,
+              "options": {
+                "maximumSignificantDigits": 3,
+                "maximumFractionDigits": 2
+              }
+            }
+          }
+        },
+        "mapSettings": {
+          "locInfo": "AzureResource",
+          "sizeSettings": "tierSizeGB",
+          "sizeAggregation": "Sum",
+          "legendMetric": "tierSizeGB",
+          "legendAggregation": "Sum",
+          "itemColorSettings": {
+            "type": "heatmap",
+            "colorAggregation": "Sum",
+            "nodeColorField": "tierSizeGB",
+            "heatmapPalette": "greenRed"
+          },
+          "locInfoColumn": "id"
+        }
+      },
+      "name": "query - unused-disks",
+      "styleSettings": {
+        "showBorder": true
+      }
+    }
+  ],
+  "fallbackResourceIds": [
+    "azure monitor"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
